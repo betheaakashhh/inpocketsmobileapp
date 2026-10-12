@@ -92,8 +92,9 @@ jobs:
       - name: Publish GitHub Release with APK
         env:
           GH_TOKEN: ${{ github.token }}
+          APK_NAME: ${{ steps.build.outputs.apk_name }}
         run: |
-          gh release create "$GITHUB_REF_NAME" "${{ steps.build.outputs.apk_name }}" \
+          gh release create "$GITHUB_REF_NAME" "$APK_NAME" \
             --title "InPockets $GITHUB_REF_NAME" \
             --generate-notes \
             --verify-tag
