@@ -2,7 +2,7 @@
   "expo": {
     "name": "InPockets",
     "slug": "inpockets",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "orientation": "portrait",
     "scheme": "inpockets",
     "userInterfaceStyle": "automatic",
@@ -15,14 +15,16 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "permissions": [
-        "CAMERA"
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "ios": {
       "bundleIdentifier": "com.inpockets.app",
       "supportsTablet": false,
       "infoPlist": {
-        "NSCameraUsageDescription": "InPockets uses your camera to verify your identity."
+        "NSCameraUsageDescription": "InPockets uses your camera to verify your identity.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "plugins": [
@@ -54,6 +56,13 @@
           }
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4181659f-ec25-45a0-bb5c-db86401d5209"
+      }
+    },
+    "owner": "betheaakashhh"
   }
 }
