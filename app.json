@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "InPockets",
+    "slug": "inpockets",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "inpockets",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "android": {
+      "package": "com.inpockets.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "CAMERA"
+      ]
+    },
+    "ios": {
+      "bundleIdentifier": "com.inpockets.app",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "InPockets uses your camera to verify your identity."
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "InPockets uses your camera to verify your identity."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#F0F9FF",
+          "dark": {
+            "backgroundColor": "#111827"
+          }
+        }
+      ]
+    ]
+  }
+}
