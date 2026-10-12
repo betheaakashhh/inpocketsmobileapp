@@ -41,9 +41,10 @@ jobs:
           TAG_VERSION="${GITHUB_REF_NAME#v}"
           APP_VERSION="$(node -p "require('./app.json').expo.version")"
           PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          LOCK_VERSION="$(node -p "require('./package-lock.json').version")"
 
-          if [ "$TAG_VERSION" != "$APP_VERSION" ] || [ "$APP_VERSION" != "$PACKAGE_VERSION" ]; then
-            echo "::error::Tag ($TAG_VERSION), app.json ($APP_VERSION), and package.json ($PACKAGE_VERSION) must have the same version."
+          if [ "$TAG_VERSION" != "$APP_VERSION" ] || [ "$APP_VERSION" != "$PACKAGE_VERSION" ] || [ "$PACKAGE_VERSION" != "$LOCK_VERSION" ]; then
+            echo "::error::Tag ($TAG_VERSION), app.json ($APP_VERSION), package.json ($PACKAGE_VERSION), and package-lock.json ($LOCK_VERSION) must have the same version."
             exit 1
           fi
 
