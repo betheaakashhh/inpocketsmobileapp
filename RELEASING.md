@@ -39,7 +39,9 @@ The first EAS build initializes the remote Android version and signing credentia
 
 ### Existing npm peer-dependency conflict
 
-The current dependency tree triggers an npm `ERESOLVE` because npm selects `react-dom@19.3.0` while the app pins `react@19.2.3`. The workflows currently use `npm ci --legacy-peer-deps`, consistent with the troubleshooting note already in the project README. Treat this as a compatibility workaround, not the final dependency fix; review Expo SDK 57's supported React / React DOM versions and regenerate the lockfile when resolving dependencies.
+The current dependency tree triggers an npm `ERESOLVE` because npm selects `react-dom@19.3.0` while the app pins `react@19.2.3`. The workflows use `npm ci --legacy-peer-deps`, and `.npmrc` makes the same resolver choice apply to EAS cloud builds. Treat this as a compatibility workaround, not the final dependency fix.
+
+Expo Doctor currently reports 20 of 21 checks passing, with the only failed check being three SDK 57 patch-level advisories (`expo`, `expo-router`, and `expo-splash-screen`). CI allows that specific advisory with a warning, but still fails other Expo Doctor errors. Resolve the React / React DOM conflict and update the Expo packages by running `npx expo install --fix` locally, then commit the updated `package.json` and `package-lock.json`. Remove the `.npmrc` workaround after the dependency tree installs cleanly without it.
 
 ## Publish a versioned preview release
 
@@ -68,7 +70,8 @@ Before any public production release:
 - verify the app points to the deployed HTTPS backend;
 - remove the development-only cleartext HTTP allowance from the Expo config/plugin;
 - complete device testing, especially onboarding, authentication, identity capture, and network failure handling;
-- verify Play policy, privacy, financial-product, and data-handling requirements with the app owner.
+- verify Play policy, privacy, financial-product, and data-handling requirements with the app owner;
+- review npm's reported audit findings before production. A CI install during setup reported 25 audit findings (11 moderate and 14 high); run `npm audit` and distinguish reachable production dependencies from development tooling before deciding fixes.
 
 ## Recovery and traceability
 
