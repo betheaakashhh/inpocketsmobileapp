@@ -39,9 +39,10 @@ The first EAS build initializes the remote Android version and signing credentia
 
 ## Publish a versioned preview release
 
-1. Update both `app.json` (`expo.version`) and `package.json` to the same new version, for example `0.1.0`.
-2. Commit and merge the release-ready changes to `main`; verify CI is green for that exact commit.
-3. Create and push a matching annotated tag:
+1. Update the Node package metadata with `npm version --no-git-tag-version 0.1.1` (replace the example version with the one you want). This updates both `package.json` and the root version in `package-lock.json`.
+2. Update `app.json` (`expo.version`) to the exact same version. The release workflow checks that the tag, `app.json`, `package.json`, and `package-lock.json` all match.
+3. Commit and merge the release-ready changes to `main`; verify CI is green for that exact commit.
+4. Create and push a matching annotated tag:
 
    ```bash
    git checkout main
@@ -50,8 +51,8 @@ The first EAS build initializes the remote Android version and signing credentia
    git push origin v0.1.0
    ```
 
-4. The `Android Release` workflow checks the version, runs validation, builds an internal-distribution APK on EAS, downloads the APK, and creates a GitHub Release with generated notes and the APK attached.
-5. Test the exact APK that was attached to the release before sharing it widely.
+5. The `Android Release` workflow checks the version, runs validation, builds an internal-distribution APK on EAS, downloads the APK, and creates a GitHub Release with generated notes and the APK attached.
+6. Test the exact APK that was attached to the release before sharing it widely.
 
 Replace `0.1.0` in the example with the release version you are actually publishing. The tag and both version fields must match.
 
