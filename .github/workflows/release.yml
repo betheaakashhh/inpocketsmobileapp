@@ -1,0 +1,87 @@
+name: Android Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-release
+  cancel-in-progress: false
+
+jobs:
+  build-and-release:
+    name: Build APK and publish GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the tagged source
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: TypeScript type-check
+        run: npm run typecheck
+
+      - name: Check Expo dependencies and configuration
+        run: npx expo-doctor
+
+      - name: Verify Expo token is configured
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::Add EXPO_TOKEN in Settings > Secrets and variables > Actions after linking this repository to EAS."
+            exit 1
+          fi
+
+      - name: Set up Expo Application Services
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build signed Android preview APK on EAS
+        id: build
+        run: |
+          eas build --platform android --profile preview --non-interactive --wait --json > eas-build.json
+          cat eas-build.json
+
+          BUILD_ID="$(jq -r 'if type == "array" then .[0].id // empty else .id // empty end' eas-build.json)"
+          if [ -z "$BUILD_ID" ]; then
+            echo "::error::Could not read the EAS build ID from the CLI response."
+            exit 1
+          fi
+          echo "build_id=$BUILD_ID" >> "$GITHUB_OUTPUT"
+
+          eas build:view "$BUILD_ID" --json > eas-build-details.json
+          cat eas-build-details.json
+
+          BUILD_URL="$(jq -r 'if type == "array" then .[0] else . end | .artifacts.applicationArchiveUrl // .artifacts.buildUrl // .artifacts.buildArtifactUrl // empty' eas-build-details.json)"
+          if [ -z "$BUILD_URL" ]; then
+            echo "::error::EAS reported a successful build but no application archive URL was found."
+            exit 1
+          fi
+
+          APK_NAME="InPockets-${GITHUB_REF_NAME}.apk"
+          curl --fail --location --retry 3 "$BUILD_URL" --output "$APK_NAME"
+          test -s "$APK_NAME"
+          echo "apk_name=$APK_NAME" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release with APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "${{ steps.build.outputs.apk_name }}" \
+            --title "InPockets $GITHUB_REF_NAME" \
+            --generate-notes \
+            --verify-tag
