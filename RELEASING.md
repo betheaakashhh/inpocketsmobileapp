@@ -37,6 +37,10 @@ Complete these steps locally before the first GitHub tag release:
 
 The first EAS build initializes the remote Android version and signing credentials. Review the EAS build settings and signing credentials carefully; keep the same application ID and preserve the production signing setup for later Play Store releases.
 
+### Existing npm peer-dependency conflict
+
+The current dependency tree triggers an npm `ERESOLVE` because npm selects `react-dom@19.3.0` while the app pins `react@19.2.3`. The workflows currently use `npm ci --legacy-peer-deps`, consistent with the troubleshooting note already in the project README. Treat this as a compatibility workaround, not the final dependency fix; review Expo SDK 57's supported React / React DOM versions and regenerate the lockfile when resolving dependencies.
+
 ## Publish a versioned preview release
 
 1. Update the Node package metadata with `npm version --no-git-tag-version 0.1.1` (replace the example version with the one you want). This updates both `package.json` and the root version in `package-lock.json`.
