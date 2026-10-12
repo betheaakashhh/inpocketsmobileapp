@@ -35,6 +35,18 @@ jobs:
       - name: Check Expo dependencies and configuration
         run: npx expo-doctor
 
+      - name: Verify tag and app versions match
+        shell: bash
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          APP_VERSION="$(node -p "require('./app.json').expo.version")"
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+
+          if [ "$TAG_VERSION" != "$APP_VERSION" ] || [ "$APP_VERSION" != "$PACKAGE_VERSION" ]; then
+            echo "::error::Tag ($TAG_VERSION), app.json ($APP_VERSION), and package.json ($PACKAGE_VERSION) must have the same version."
+            exit 1
+          fi
+
       - name: Verify Expo token is configured
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
