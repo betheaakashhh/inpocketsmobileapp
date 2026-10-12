@@ -1,5 +1,17 @@
 # InPockets — React Native (Expo) port of the Flutter app
 
+<!-- readme-sync-bot:toc:start -->
+## Table of Contents
+
+- [Run it on your rooted phone (no emulator)](#run-it-on-your-rooted-phone-no-emulator)
+- [If the app crashes on launch ("undefined is not a function" at expo-router)](#if-the-app-crashes-on-launch-undefined-is-not-a-function-at-expo-router)
+- [Flutter → React Native map](#flutter-react-native-map)
+- [Theme](#theme)
+- [Intentional differences from the Flutter app](#intentional-differences-from-the-flutter-app)
+- [Known gaps / next steps](#known-gaps-next-steps)
+- [📋 Recommended Sections Checklist](#-recommended-sections-checklist)
+<!-- readme-sync-bot:toc:end -->
+
 Rewrite of `inpocketsV2-main/lib` (Flutter + Riverpod + go_router + Dio) in
 Expo SDK 57 / React Native 0.86 / TypeScript. It talks to the **same FastAPI backend**
 (`/api/v1/...`) with the same contracts, so the backend does not change.
@@ -70,3 +82,16 @@ Settings → **Dark mode** switch and **Match device** switch (persisted).
 - No iProov/liveness SDK yet (backend issue #3). That needs a **development build**, not Expo Go.
 - Not tested on a physical device from here: I verified `tsc --noEmit` and a full Android Metro bundle only.
 - No automated tests yet.
+
+<!-- readme-sync-bot:checklist:start -->
+## 📋 Recommended Sections Checklist
+
+_The bot can't write these automatically — they need your judgment, not a diff. This list updates itself as you add them:_
+
+- [ ] License
+- [ ] Author / Contact
+- [ ] Contributing Guidelines
+- [ ] Acknowledgements
+- [ ] Testing
+- [ ] Deployment
+<!-- readme-sync-bot:checklist:end -->
