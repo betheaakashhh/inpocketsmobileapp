@@ -1,0 +1,116 @@
+name: PR Checks
+
+# Complements ci.yml (typecheck + expo-doctor). This workflow adds:
+#   1. version-sync  - app.json, package.json and package-lock.json must agree
+#                      (the same rule release.yml enforces at tag time, caught early)
+#   2. audit         - npm audit on production dependencies (reported, not blocking)
+#   3. release-ready - tells you whether the current version is already tagged
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  version-sync:
+    name: Versions match
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Compare app.json, package.json and package-lock.json
+        shell: bash
+        run: |
+          APP_VERSION="$(node -p "require('./app.json').expo.version")"
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          LOCK_VERSION="$(node -p "require('./package-lock.json').version")"
+
+          echo "app.json:          $APP_VERSION"
+          echo "package.json:      $PACKAGE_VERSION"
+          echo "package-lock.json: $LOCK_VERSION"
+
+          if [ "$APP_VERSION" != "$PACKAGE_VERSION" ] || [ "$PACKAGE_VERSION" != "$LOCK_VERSION" ]; then
+            echo "::error::Version mismatch. Run 'npm version --no-git-tag-version X.Y.Z' and set expo.version in app.json to the same value."
+            exit 1
+          fi
+
+          if ! echo "$APP_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Version '$APP_VERSION' is not plain MAJOR.MINOR.PATCH (required by the v*.*.* release tag pattern)."
+            exit 1
+          fi
+
+  release-ready:
+    name: Release status of this version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository with tags
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Report whether this version is already tagged
+        shell: bash
+        run: |
+          VERSION="$(node -p "require('./app.json').expo.version")"
+          TAG="v$VERSION"
+
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            MSG="$TAG is already released. If this change should ship, bump the version first; never reuse or move a tag."
+            echo "::notice::$MSG"
+            echo "### Release status" >> "$GITHUB_STEP_SUMMARY"
+            echo "$MSG" >> "$GITHUB_STEP_SUMMARY"
+          else
+            MSG="$TAG has not been tagged yet. After merging to main with green CI: git tag -a $TAG -m \"InPockets $TAG\" && git push origin $TAG"
+            echo "::notice::$MSG"
+            echo "### Release status" >> "$GITHUB_STEP_SUMMARY"
+            echo "$MSG" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  audit:
+    name: Dependency audit (production)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Audit production dependencies
+        shell: bash
+        run: |
+          set +e
+          npm audit --omit=dev --audit-level=high 2>&1 | tee audit.log
+          status=${PIPESTATUS[0]}
+          set -e
+
+          {
+            echo "### npm audit (production dependencies)"
+            echo '```'
+            tail -n 40 audit.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$status" -ne 0 ]; then
+            # Reported, not blocking: RELEASING.md asks you to triage reachable vs
+            # tooling-only findings before a production release. To make this
+            # blocking later, replace this block with: exit "$status"
+            echo "::warning::npm audit found high-severity issues in production dependencies. Review the job summary."
+          fi
