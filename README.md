@@ -10,6 +10,7 @@
 - [Intentional differences from the Flutter app](#intentional-differences-from-the-flutter-app)
 - [Known gaps / next steps](#known-gaps-next-steps)
 - [Configuration](#configuration)
+- [Tech Stack](#tech-stack)
 - [📋 Recommended Sections Checklist](#-recommended-sections-checklist)
 <!-- readme-sync-bot:toc:end -->
 
@@ -90,6 +91,17 @@ Settings → **Dark mode** switch and **Match device** switch (persisted).
 |----------|-------------|----------|
 | `EXPO_PUBLIC_API_BASE_URL` | Expo Public Api Base Url | Optional |
 | `EXPO_PUBLIC_VERBOSE_LOGS` | Expo Public Verbose Logs | Optional |
+
+## Tech Stack
+
+| Package | Version | Type |
+|---------|---------|------|
+| `@expo/metro-runtime` | ~57.0.17 | dependency |
+| `expo` | ~57.0.31 | dependency |
+| `expo-constants` | ~57.0.22 | dependency |
+| `expo-linking` | ~57.0.13 | dependency |
+| `expo-router` | ~57.0.29 | dependency |
+| `expo-splash-screen` | ~57.0.10 | dependency |
 
 <!-- readme-sync-bot:checklist:start -->
 ## 📋 Recommended Sections Checklist
