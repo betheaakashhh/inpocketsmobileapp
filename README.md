@@ -9,6 +9,7 @@
 - [Theme](#theme)
 - [Intentional differences from the Flutter app](#intentional-differences-from-the-flutter-app)
 - [Known gaps / next steps](#known-gaps-next-steps)
+- [Configuration](#configuration)
 - [📋 Recommended Sections Checklist](#-recommended-sections-checklist)
 <!-- readme-sync-bot:toc:end -->
 
@@ -82,6 +83,13 @@ Settings → **Dark mode** switch and **Match device** switch (persisted).
 - No iProov/liveness SDK yet (backend issue #3). That needs a **development build**, not Expo Go.
 - Not tested on a physical device from here: I verified `tsc --noEmit` and a full Android Metro bundle only.
 - No automated tests yet.
+
+## Configuration
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `EXPO_PUBLIC_API_BASE_URL` | Expo Public Api Base Url | Optional |
+| `EXPO_PUBLIC_VERBOSE_LOGS` | Expo Public Verbose Logs | Optional |
 
 <!-- readme-sync-bot:checklist:start -->
 ## 📋 Recommended Sections Checklist
