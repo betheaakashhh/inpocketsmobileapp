@@ -30,13 +30,24 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ status: 'unauthenticated' });
       return;
     }
-    try {
-      const user = await authRepository.getMe();
-      set({ status: 'authenticated', user });
-    } catch {
-      // Access token invalid and the interceptor's refresh also failed.
-      set({ status: 'unauthenticated' });
+    // A flaky connection at launch must not look like "logged out": retry with backoff.
+    // Stored tokens are never cleared here; only the interceptor does that, and only when the
+    // server explicitly rejects the session.
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const user = await authRepository.getMe();
+        set({ status: 'authenticated', user });
+        return;
+      } catch (e) {
+        lastError = e;
+        const offline = (e as { isNetworkError?: boolean }).isNetworkError === true;
+        if (!offline) break;
+        await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+      }
     }
+    void lastError;
+    set({ status: 'unauthenticated' });
   },
 
   onVerifiedOtp(user) {

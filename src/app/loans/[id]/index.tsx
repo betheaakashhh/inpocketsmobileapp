@@ -66,8 +66,8 @@ export default function LoanDetailScreen() {
           {isDraft(l) ? <PrimaryButton label="Submit application" isLoading={busy} onPress={submitDraft} /> : null}
           {l.status === 'APPROVED' ? (
             <View style={{ gap: Spacing.sm }}>
-              <PrimaryButton label="View your offer" icon="local-offer" onPress={() => router.push(Routes.loanOffer(l.id, l.requestedAmount, l.requestedTenureDays))} />
-              <SecondaryButton label="Repayment & disbursement" onPress={() => router.push(Routes.loanDisbursement(l.id))} />
+              <PrimaryButton label="View your offer" icon="local-offer" onPress={() => router.push(Routes.loanOffer(l.id))} />
+              <SecondaryButton label="Payout status" onPress={() => router.push(Routes.loanDisbursement(l.id))} />
             </View>
           ) : null}
 
