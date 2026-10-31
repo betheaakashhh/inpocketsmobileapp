@@ -44,15 +44,21 @@ http.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
  * Single-flight refresh: if several requests 401 at once, only one
  * /auth/refresh call is made; the rest await the same promise.
  */
-let refreshInFlight: Promise<boolean> | null = null;
+type RefreshOutcome = 'ok' | 'rejected' | 'unreachable';
+let refreshInFlight: Promise<RefreshOutcome> | null = null;
 
-function refreshSession(): Promise<boolean> {
+/**
+ * 'rejected'    -> the server said the session is over (401/403/400): sign the user out.
+ * 'unreachable' -> timeout, offline, 5xx: the session may be perfectly valid, so do NOT sign out
+ *                  (a dropped connection every 15 minutes used to force a fresh SMS login).
+ */
+function refreshSession(): Promise<RefreshOutcome> {
   if (refreshInFlight) return refreshInFlight;
 
-  refreshInFlight = (async () => {
+  refreshInFlight = (async (): Promise<RefreshOutcome> => {
     try {
       const session = await tokenStorage.read();
-      if (!session || isRefreshTokenExpired(session)) return false;
+      if (!session || isRefreshTokenExpired(session)) return 'rejected';
 
       const res = await http.post(
         '/auth/refresh',
@@ -67,9 +73,10 @@ function refreshSession(): Promise<boolean> {
         refreshTokenExpiresAt: new Date(d.refresh_token_expires_at),
         userId: d.user_id,
       });
-      return true;
-    } catch {
-      return false;
+      return 'ok';
+    } catch (e) {
+      if (axios.isAxiosError(e) && (!e.response || e.response.status >= 500)) return 'unreachable';
+      return 'rejected';
     } finally {
       refreshInFlight = null;
     }
@@ -91,13 +98,14 @@ http.interceptors.response.use(
 
     if (response.status === 401 && config && !config.skipRefreshRetry && !config._retried) {
       const refreshed = await refreshSession();
-      if (refreshed) {
+      if (refreshed === 'ok') {
         try {
           return await http.request({ ...config, _retried: true });
         } catch (retryErr) {
           return Promise.reject(toApiException(retryErr));
         }
       }
+      if (refreshed === 'unreachable') return Promise.reject(ApiException.network());
       await onSessionExpired();
     }
 

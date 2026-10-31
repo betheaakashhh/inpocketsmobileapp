@@ -15,7 +15,7 @@ export const Routes = {
   homeLoans: '/home/loans',
   loanApply: '/loans/apply',
   loanDetail: (id: string) => `/loans/${id}`,
-  loanOffer: (id: string, amount: number, tenure: number) => `/loans/${id}/offer?amount=${amount}&tenure=${tenure}`,
+  loanOffer: (id: string) => `/loans/${id}/offer`,
   loanKfs: (id: string) => `/loans/${id}/kfs`,
   loanAgreement: (id: string) => `/loans/${id}/agreement`,
   loanBank: (id: string) => `/loans/${id}/bank-account`,

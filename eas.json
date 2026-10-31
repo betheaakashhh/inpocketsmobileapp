@@ -9,13 +9,19 @@
       "android": {
         "buildType": "apk"
       },
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://REPLACE-WITH-STAGING-API.invalid"
+      }
     },
     "production": {
       "channel": "production",
       "autoIncrement": true,
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_BASE_URL": "https://REPLACE-WITH-PRODUCTION-API.invalid"
       }
     }
   }

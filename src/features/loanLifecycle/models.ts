@@ -1,77 +1,59 @@
 /**
- * Models for everything between "loan approved" and "loan closed". None of
- * this exists in the backend yet — these are the shapes a real
- * implementation should return, so wiring it in later is a data-source swap.
+ * Everything between "application approved" and "money received", exactly as the
+ * backend reports it. Nothing here is computed on the device: terms, status and
+ * outcomes always come from the server (the app never decides that a document is
+ * signed or a payout was made).
  */
-export type OfferStatus = 'issued' | 'accepted' | 'declined' | 'expired';
+export type OfferStatus = 'draft' | 'issued' | 'accepted' | 'declined' | 'expired' | 'cancelled';
+
+export interface OfferTerm { key: string; label: string; value: string }
 
 export interface LoanOffer {
   id: string;
   applicationId: string;
-  approvedAmount: number;
-  disbursableAmount: number; // approved minus upfront fees
-  tenureDays: number;
-  annualInterestRatePercent: number;
-  processingFee: number;
-  otherCharges: number;
-  apr: number;
-  totalRepaymentAmount: number;
-  emiAmount: number;
-  issuedAt: Date;
-  expiresAt: Date;
   version: number;
+  principalAmount: number;
+  tenureDays: number;
+  terms: OfferTerm[]; // lender-set commercial terms (interest rate, fees, ...)
+  issuedAt: Date | null;
+  expiresAt: Date | null;
+  acceptedAt: Date | null;
+  kfsDocumentId: string | null;
+  agreementDocumentId: string | null;
   status: OfferStatus;
-  lenderName: string;
 }
-export const isOfferExpired = (o: LoanOffer) => Date.now() > o.expiresAt.getTime();
-
-export interface KfsLineItem { label: string; value: string }
-export interface KfsDocument {
-  id: string; offerId: string; version: number; generatedAt: Date; lineItems: KfsLineItem[];
-}
+export const isOfferExpired = (o: LoanOffer) =>
+  o.status === 'expired' || (o.status === 'issued' && o.expiresAt !== null && Date.now() > o.expiresAt.getTime());
 
 export type ESignStatus = 'initiated' | 'pending' | 'signed' | 'failed' | 'expired' | 'manualReview';
-export interface LoanAgreement {
-  id: string; offerId: string; version: number; createdAt: Date;
-  signingStatus: ESignStatus; signedAt?: Date; providerRef?: string;
+export interface ESign {
+  id: string;
+  offerId: string;
+  status: ESignStatus;
+  signingUrl: string | null;
+  expiresAt: Date;
+  signedAt: Date | null;
 }
 
-export type BankVerificationStatus = 'notStarted' | 'pending' | 'verified' | 'failed' | 'manualReview';
+export type BankVerificationStatus = 'initiated' | 'pending' | 'verified' | 'failed' | 'manualReview' | 'expired';
 export interface BankAccount {
-  id: string; accountHolderName: string; accountNumberMasked: string; ifsc: string;
-  bankName: string; status: BankVerificationStatus; failureReason?: string;
+  id: string;
+  accountNumberMasked: string;
+  ifsc: string;
+  bankName: string | null;
+  status: BankVerificationStatus;
+  failureCode: string | null;
 }
 
-export type DisbursementStatus = 'pending' | 'processing' | 'success' | 'failed' | 'reversed' | 'requiresReview';
+/** Customer-facing payout status. `disbursed` only after the provider has confirmed it. */
+export type DisbursementStatus = 'pending' | 'processing' | 'disbursed' | 'failed' | 'reversed' | 'underReview';
 export interface Disbursement {
-  id: string; loanId: string; amount: number; status: DisbursementStatus;
-  initiatedAt: Date; completedAt?: Date; utr?: string; failureReason?: string;
-}
-
-export type InstallmentStatus = 'upcoming' | 'due' | 'paid' | 'overdue' | 'partiallyPaid';
-export interface RepaymentInstallment {
-  installmentNumber: number; dueDate: Date; principalComponent: number; interestComponent: number;
-  amountDue: number; amountPaid: number; status: InstallmentStatus; daysPastDue: number;
-}
-export const amountRemaining = (i: RepaymentInstallment) => Math.max(0, Math.min(i.amountDue, i.amountDue - i.amountPaid));
-
-export interface RepaymentSchedule { loanId: string; installments: RepaymentInstallment[]; generatedAt: Date }
-export const totalOutstanding = (s: RepaymentSchedule) => s.installments.reduce((sum, i) => sum + amountRemaining(i), 0);
-export const isFullyPaid = (s: RepaymentSchedule) => s.installments.every((i) => i.status === 'paid');
-export function nextDue(s: RepaymentSchedule): RepaymentInstallment | null {
-  const due = s.installments.filter((i) => i.status === 'due' || i.status === 'overdue');
-  if (due.length === 0) return null;
-  return due.reduce((a, b) => (a.dueDate.getTime() < b.dueDate.getTime() ? a : b));
-}
-
-export type PaymentMethod = 'upi' | 'debitCard' | 'netBanking';
-export type PaymentStatus = 'pending' | 'success' | 'failed';
-export interface Payment {
-  id: string; loanId: string; amount: number; method: PaymentMethod; status: PaymentStatus;
-  createdAt: Date; installmentNumbers: number[]; receiptRef?: string;
-}
-
-export interface ActiveLoan {
-  id: string; applicationId: string; principalAmount: number; disbursedAt: Date;
-  status: string; // ACTIVE | OVERDUE | CLOSED
+  id: string;
+  offerId: string;
+  status: DisbursementStatus;
+  amount: number;
+  accountNumberMasked: string;
+  ifsc: string;
+  utr: string | null;
+  completedAt: Date | null;
 }

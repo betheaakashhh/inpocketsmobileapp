@@ -15,7 +15,9 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "permissions": [
-        "android.permission.CAMERA",
+        "android.permission.CAMERA"
+      ],
+      "blockedPermissions": [
         "android.permission.RECORD_AUDIO"
       ]
     },
@@ -33,14 +35,15 @@
       [
         "expo-image-picker",
         {
-          "cameraPermission": "InPockets uses your camera to verify your identity."
+          "cameraPermission": "InPockets uses your camera to verify your identity.",
+          "microphonePermission": false
         }
       ],
       [
         "expo-build-properties",
         {
           "android": {
-            "usesCleartextTraffic": true
+            "usesCleartextTraffic": false
           }
         }
       ],
